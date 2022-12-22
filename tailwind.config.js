@@ -6,8 +6,16 @@ module.exports = {
     "./components/**/*.tsx",
     "./ui/**/*.tsx",
   ],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        dmsans: ["Alegreya Sans", "sans-serif"],
+        dmserif: ["Alegreya", "serif"],
+      },
+    },
   },
   plugins: [],
 };
