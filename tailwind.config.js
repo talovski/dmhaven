@@ -1,11 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./app/**/*.tsx",
-    "./pages/**/*.tsx",
-    "./components/**/*.tsx",
-    "./ui/**/*.tsx",
-  ],
+  content: ["./app/**/*.tsx", "./pages/**/*.tsx", "./components/**/*.tsx", "./ui/**/*.tsx"],
   future: {
     hoverOnlyWhenSupported: true,
   },
@@ -17,5 +12,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/forms")],
 };

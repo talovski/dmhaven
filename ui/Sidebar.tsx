@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSelectedLayoutSegments } from "next/navigation";
-import { categories, CategoriesEnum } from "../lib/categories";
+import { categories } from "../lib/categories";
 import Link from "next/link";
 import clsx from "clsx";
 
@@ -45,13 +45,8 @@ export default function Sidebar() {
   );
 }
 
-function Item({
-  category,
-}: {
-  category: { index: CategoriesEnum; text: string };
-}) {
+function Item({ category }: { category: { index: string; text: string } }) {
   const segment = useSelectedLayoutSegments();
-
   const isActive = category.index === segment[0];
 
   return (

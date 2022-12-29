@@ -9,12 +9,13 @@ import useMarkdown from "../../../lib/useMarkdown";
 
 import { classesList } from "../../../lib/classesList";
 import { abilityScoresList } from "../../../lib/abilityScoresList";
+import IconSearch from "../../../ui/icons/IconSearch";
 
 export default function SpellsList({ spells }: { spells: Spell[] }) {
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [openedSpells, setOpenedSpells] = useState<string[]>([]);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [selectedAbilityScores, setSelectedAbilityScores] = useState<string[]>([]);
 
   const isSpellOpened = (spell: string) => openedSpells.includes(spell);
 
@@ -30,12 +31,14 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
       ? setSelectedClasses(selectedClasses.filter((currentClass) => currentClass !== newClass))
       : setSelectedClasses([...selectedClasses, newClass]);
 
-  const isSkillSelected = (skill: string) => selectedSkills.includes(skill);
+  const isSkillSelected = (skill: string) => selectedAbilityScores.includes(skill);
 
   const updateSkills = (skill: string) =>
-    selectedSkills.includes(skill)
-      ? setSelectedSkills(selectedSkills.filter((currentSkill) => currentSkill !== skill))
-      : setSelectedSkills([...selectedSkills, skill]);
+    selectedAbilityScores.includes(skill)
+      ? setSelectedAbilityScores(
+          selectedAbilityScores.filter((currentSkill) => currentSkill !== skill)
+        )
+      : setSelectedAbilityScores([...selectedAbilityScores, skill]);
 
   const filteredSpells = spells
     .filter((spell) =>
@@ -44,9 +47,9 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
         : spell
     )
     .filter((spell) =>
-      selectedSkills?.length
+      selectedAbilityScores?.length
         ? spell.dc?.type.index
-          ? selectedSkills.includes(spell.dc?.type.index)
+          ? selectedAbilityScores.includes(spell.dc?.type.index)
           : undefined
         : spell
     )
@@ -67,21 +70,25 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
       <div className="grid">
         <Header
           selectedClasses={selectedClasses}
+          searchQuery={searchQuery}
           updateSelectedClasses={updateSelectedClasses}
           isClassSelected={isClassSelected}
-          isSkillSelected={isSkillSelected}
+          isAbilityScoreSelected={isSkillSelected}
           updateSkills={updateSkills}
-          searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-        {filteredSpells.map((spell) => (
-          <SpellCard
-            key={spell.index}
-            isOpen={isSpellOpened(spell.index)}
-            toggleOpen={() => updateOpenedSpells(spell.index)}
-            spell={spell}
-          />
-        ))}
+        {filteredSpells?.length ? (
+          filteredSpells.map((spell) => (
+            <SpellCard
+              key={spell.index}
+              isOpen={isSpellOpened(spell.index)}
+              toggleOpen={() => updateOpenedSpells(spell.index)}
+              spell={spell}
+            />
+          ))
+        ) : (
+          <p>No spells found</p>
+        )}
       </div>
     </div>
   );
@@ -92,7 +99,7 @@ function Header({
   updateSelectedClasses,
   updateSkills,
   isClassSelected,
-  isSkillSelected,
+  isAbilityScoreSelected,
   searchQuery,
   setSearchQuery,
 }: {
@@ -100,20 +107,24 @@ function Header({
   updateSelectedClasses: (x: string) => void;
   updateSkills: (x: string) => void;
   isClassSelected: (x: string) => boolean;
-  isSkillSelected: (x: string) => boolean;
+  isAbilityScoreSelected: (x: string) => boolean;
   searchQuery: string;
   setSearchQuery: Dispatch<SetStateAction<string>>;
 }) {
   return (
-    <div className="grid">
-      <input
-        className="border border-solid border-red-400"
-        value={searchQuery}
-        onChange={(event) => setSearchQuery(event.target.value)}
-      />
+    <div className="grid ">
+      <div className="relative flex items-center">
+        <IconSearch className="absolute left-2 h-4 w-4" />
+        <input
+          className="w-3/6 border border-solid border-red-700 py-2 pl-8"
+          value={searchQuery}
+          placeholder="Search by name, class or ability score"
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+      </div>
 
       <Popover className="relative">
-        <Popover.Button className="align-center flex justify-center rounded-md bg-green-100 px-3 py-2 hover:bg-green-300">
+        <Popover.Button className="align-center flex justify-center rounded-[4px] border border-solid border-[#d3d0c9] bg-[#d3d0c9] px-3 hover:bg-green-300">
           Filter by class{!!selectedClasses?.length && ` (${selectedClasses?.length})`}
         </Popover.Button>
         <Popover.Panel className="absolute z-10 bg-slate-50 px-4 py-8">
@@ -147,7 +158,7 @@ function Header({
                 type="checkbox"
                 id={score.index}
                 name={score.index}
-                checked={isSkillSelected(score.index)}
+                checked={isAbilityScoreSelected(score.index)}
                 onChange={() => updateSkills(score.index)}
               />
               <label htmlFor={score.index}>{score.name}</label>

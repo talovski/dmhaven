@@ -1,5 +1,3 @@
-import { remark } from "remark";
-
 export default function useMarkdown({ markdown }: { markdown: string[] }) {
   let table: string[] = [];
   let body: string[] = [];
@@ -11,7 +9,6 @@ export default function useMarkdown({ markdown }: { markdown: string[] }) {
       body.push(p);
     }
   });
-  console.log("table", table.join(""));
   return {
     table: table.join("\n"),
     body: body,
