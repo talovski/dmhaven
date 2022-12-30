@@ -1,7 +1,7 @@
 "use client";
 
 import { Popover } from "@headlessui/react";
-import { Dispatch, SetStateAction, useState } from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Spell, SpellDamage, SpellDc } from "../../../graphql/codegen/graphql";
@@ -10,55 +10,89 @@ import useMarkdown from "../../../lib/useMarkdown";
 import { classesList } from "../../../lib/classesList";
 import { abilityScoresList } from "../../../lib/abilityScoresList";
 import IconSearch from "../../../ui/icons/IconSearch";
+import create from "zustand";
+
+type State = {
+  search: string;
+  openedSpells: string[];
+  classes: string[];
+  levels: string[];
+  abilityScores: string[];
+};
+
+type Actions = {
+  dispatch: (args: Args) => void;
+};
+
+type Type = keyof State;
+type Args = {
+  type: Type;
+  item: string;
+};
+
+function update(field: keyof Omit<State, "search">, state: State, item: string) {
+  return state[field].includes(item)
+    ? state[field].filter((fieldItem) => fieldItem !== item)
+    : [...state[field], item];
+}
+
+function reducer(state: State, { type, item }: Args) {
+  switch (type) {
+    case "search":
+      return { search: item };
+    case "abilityScores":
+      return {
+        abilityScores: update("abilityScores", state, item),
+      };
+    case "classes":
+      return {
+        classes: update("classes", state, item),
+      };
+    case "levels":
+      return {
+        levels: update("levels", state, item),
+      };
+    case "openedSpells": {
+      return {
+        openedSpells: update("openedSpells", state, item),
+      };
+    }
+  }
+}
+
+const useFiltersStore = create<State & Actions>((set) => ({
+  search: "",
+  openedSpells: [],
+  abilityScores: [],
+  levels: [],
+  classes: [],
+  dispatch: (args) => set((state) => reducer(state, args)),
+}));
 
 export default function SpellsList({ spells }: { spells: Spell[] }) {
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [openedSpells, setOpenedSpells] = useState<string[]>([]);
-  const [selectedAbilityScores, setSelectedAbilityScores] = useState<string[]>([]);
+  const filters = useFiltersStore();
 
-  const isSpellOpened = (spell: string) => openedSpells.includes(spell);
-
-  const updateOpenedSpells = (spell: string) =>
-    openedSpells.includes(spell)
-      ? setOpenedSpells(openedSpells.filter((openedSpell) => spell !== openedSpell))
-      : setOpenedSpells([...openedSpells, spell]);
-
-  const isClassSelected = (cls: string) => selectedClasses.includes(cls);
-
-  const updateSelectedClasses = (newClass: string) =>
-    isClassSelected(newClass)
-      ? setSelectedClasses(selectedClasses.filter((currentClass) => currentClass !== newClass))
-      : setSelectedClasses([...selectedClasses, newClass]);
-
-  const isSkillSelected = (skill: string) => selectedAbilityScores.includes(skill);
-
-  const updateSkills = (skill: string) =>
-    selectedAbilityScores.includes(skill)
-      ? setSelectedAbilityScores(
-          selectedAbilityScores.filter((currentSkill) => currentSkill !== skill)
-        )
-      : setSelectedAbilityScores([...selectedAbilityScores, skill]);
+  const isSpellOpened = (spell: string) => filters.openedSpells.includes(spell);
 
   const filteredSpells = spells
     .filter((spell) =>
-      selectedClasses?.length
-        ? spell.classes.some((spellClass) => selectedClasses.includes(spellClass.index))
+      filters.classes?.length
+        ? spell.classes.some((spellClass) => filters.classes.includes(spellClass.index))
         : spell
     )
     .filter((spell) =>
-      selectedAbilityScores?.length
+      filters.abilityScores?.length
         ? spell.dc?.type.index
-          ? selectedAbilityScores.includes(spell.dc?.type.index)
+          ? filters.abilityScores.includes(spell.dc?.type.index)
           : undefined
         : spell
     )
     .filter((spell) => {
-      if (searchQuery?.length) {
+      if (filters.search?.length) {
         return (
-          spell.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          spell.name.toLowerCase().includes(filters.search.toLowerCase()) ||
           spell.classes.some((spellClass) =>
-            spellClass.name.toLowerCase().includes(searchQuery.toLowerCase())
+            spellClass.name.toLowerCase().includes(filters.search.toLowerCase())
           )
         );
       } else {
@@ -68,21 +102,13 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
   return (
     <div className="mt-12">
       <div className="grid">
-        <Header
-          selectedClasses={selectedClasses}
-          searchQuery={searchQuery}
-          updateSelectedClasses={updateSelectedClasses}
-          isClassSelected={isClassSelected}
-          isAbilityScoreSelected={isSkillSelected}
-          updateSkills={updateSkills}
-          setSearchQuery={setSearchQuery}
-        />
+        <Header />
         {filteredSpells?.length ? (
           filteredSpells.map((spell) => (
             <SpellCard
               key={spell.index}
               isOpen={isSpellOpened(spell.index)}
-              toggleOpen={() => updateOpenedSpells(spell.index)}
+              toggleOpen={() => filters.dispatch({ item: spell.index, type: "openedSpells" })}
               spell={spell}
             />
           ))
@@ -94,78 +120,88 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
   );
 }
 
-function Header({
-  selectedClasses,
-  updateSelectedClasses,
-  updateSkills,
-  isClassSelected,
-  isAbilityScoreSelected,
-  searchQuery,
-  setSearchQuery,
-}: {
-  selectedClasses: string[];
-  updateSelectedClasses: (x: string) => void;
-  updateSkills: (x: string) => void;
-  isClassSelected: (x: string) => boolean;
-  isAbilityScoreSelected: (x: string) => boolean;
-  searchQuery: string;
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-}) {
+function PopoverButton({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <Popover.Button
+      className={[
+        className,
+        "flex justify-center rounded-[4px] border border-solid bg-[#ededed] px-2 hover:bg-[#e8e8e8]",
+      ].join(" ")}
+    >
+      {children}
+    </Popover.Button>
+  );
+}
+
+function Header() {
+  const filters = useFiltersStore();
+
+  function isSelected(state: State, { type, item }: Args): boolean {
+    return state[type].includes(item);
+  }
+
   return (
     <div className="grid ">
       <div className="relative flex items-center">
         <IconSearch className="absolute left-2 h-4 w-4" />
         <input
           className="w-3/6 border border-solid border-red-700 py-2 pl-8"
-          value={searchQuery}
+          value={filters.search}
           placeholder="Search by name, class or ability score"
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => filters.dispatch({ item: event.target.value, type: "search" })}
         />
       </div>
-
-      <Popover className="relative">
-        <Popover.Button className="align-center flex justify-center rounded-[4px] border border-solid border-[#d3d0c9] bg-[#d3d0c9] px-3 hover:bg-green-300">
-          Filter by class{!!selectedClasses?.length && ` (${selectedClasses?.length})`}
-        </Popover.Button>
-        <Popover.Panel className="absolute z-10 bg-slate-50 px-4 py-8">
-          {classesList.map((clx) => (
-            <div key={clx.index}>
-              <input
-                type="checkbox"
-                id={clx.index}
-                name={clx.index}
-                checked={isClassSelected(clx.index)}
-                onChange={() => updateSelectedClasses(clx.index)}
-                className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-green-600 focus:ring-2 focus:ring-green-500"
-              />
-              <label
-                htmlFor={clx.index}
-                key={clx.index}
-                onClick={() => updateSelectedClasses(clx.index)}
-              >
-                {clx.name}
-              </label>
-            </div>
-          ))}
-        </Popover.Panel>
-      </Popover>
-      <Popover className="relative">
-        <Popover.Button>Ability Score</Popover.Button>
-        <Popover.Panel className="absolute z-10 w-[320px] bg-slate-50">
-          {abilityScoresList.map((score) => (
-            <div key={score.index}>
-              <input
-                type="checkbox"
-                id={score.index}
-                name={score.index}
-                checked={isAbilityScoreSelected(score.index)}
-                onChange={() => updateSkills(score.index)}
-              />
-              <label htmlFor={score.index}>{score.name}</label>
-            </div>
-          ))}
-        </Popover.Panel>
-      </Popover>
+      <div className="flex gap-2">
+        <Popover className="relative">
+          {({ open }) => (
+            <>
+              <PopoverButton className={open ? "bg-[#e8e8e8]" : ""}>
+                Class{!!filters.classes?.length && ` (${filters.classes?.length})`}
+              </PopoverButton>
+              <Popover.Panel className="absolute z-10 bg-slate-50 px-4 py-8">
+                {classesList.map((clx) => (
+                  <div key={clx.index}>
+                    <input
+                      type="checkbox"
+                      id={clx.index}
+                      name={clx.index}
+                      checked={isSelected(filters, { item: clx.index, type: "classes" })}
+                      onChange={() => filters.dispatch({ item: clx.index, type: "classes" })}
+                      className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-green-600 focus:ring-2 focus:ring-green-500"
+                    />
+                    <label htmlFor={clx.index} key={clx.index}>
+                      {clx.name}
+                    </label>
+                  </div>
+                ))}
+              </Popover.Panel>
+            </>
+          )}
+        </Popover>
+        <Popover className="relative">
+          <PopoverButton>
+            Ability score
+            {!!filters.abilityScores?.length && ` (${filters.abilityScores?.length})`}{" "}
+          </PopoverButton>
+          <Popover.Panel className="absolute z-10 w-[320px] bg-slate-50">
+            {abilityScoresList.map((score) => (
+              <div key={score.index}>
+                <input
+                  type="checkbox"
+                  id={score.index}
+                  name={score.index}
+                  checked={isSelected(filters, { item: score.index, type: "abilityScores" })}
+                  onChange={() => filters.dispatch({ item: score.index, type: "abilityScores" })}
+                />
+                <label htmlFor={score.index}>{score.name}</label>
+              </div>
+            ))}
+          </Popover.Panel>
+        </Popover>
+        <Popover>
+          <PopoverButton>Level</PopoverButton>
+        </Popover>
+      </div>
     </div>
   );
 }
