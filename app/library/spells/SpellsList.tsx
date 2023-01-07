@@ -36,24 +36,22 @@ export default function SpellsList({ spells }: { spells: Spell[] }) {
     );
 
   return (
-    <div className="relative mt-12">
-      <div className="py-2 px-4">
-        <SpellsHeader />
-        <div className="border-b-2 border-amber-900 pt-2 last:border-none">
-          {filteredSpells?.length ? (
-            filteredSpells.map((spell) => (
-              <SpellCard
-                key={spell.index}
-                isOpen={isSpellOpened(spell.index)}
-                toggleOpen={() => filters.dispatch({ item: spell.index, type: "openedSpells" })}
-                spell={spell}
-              />
-            ))
-          ) : (
-            <p>No spells found</p>
-          )}
-        </div>
+    <>
+      <SpellsHeader />
+      <div className="border-b-2 border-amber-900 pt-2 last:border-none">
+        {filteredSpells?.length ? (
+          filteredSpells.map((spell) => (
+            <SpellCard
+              key={spell.index}
+              isOpen={isSpellOpened(spell.index)}
+              toggleOpen={() => filters.dispatch({ item: spell.index, type: "openedSpells" })}
+              spell={spell}
+            />
+          ))
+        ) : (
+          <p>No spells found</p>
+        )}
       </div>
-    </div>
+    </>
   );
 }

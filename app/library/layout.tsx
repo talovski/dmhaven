@@ -1,17 +1,13 @@
 import React from "react";
 import Sidebar from "../../ui/Sidebar";
 
-export default function LibraryLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function LibraryLayout({ children }: { children: React.ReactNode }) {
   return (
     <div>
       <aside>
         <Sidebar />
       </aside>
-      <main className="ml-72 font-dmserif">{children}</main>
+      <main className="mt-12 max-w-prose px-4 font-dmserif lg:ml-72">{children}</main>
     </div>
   );
 }

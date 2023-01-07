@@ -97,3 +97,13 @@ export const spellsQuery = gql`
     }
   }
 `;
+
+export const spellQuery = gql`
+  query SpellQuery($index: String) {
+    spell(index: $index) {
+      index
+      name
+      desc
+    }
+  }
+`;

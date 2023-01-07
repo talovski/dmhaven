@@ -5,6 +5,7 @@ import useMarkdown from "../../../lib/useMarkdown";
 import { useFiltersStore } from "./store";
 import IconChevron from "../../../ui/icons/IconChevron";
 import clsx from "clsx";
+import Link from "next/link";
 
 type Props = {
   spell: Spell;
@@ -30,6 +31,9 @@ export default function SpellCard({ spell, isOpen, toggleOpen }: Props) {
       )}
       {isOpen && (
         <div className="max-w-prose px-5 pb-5">
+          <p>
+            <Link href={"/library/spells/" + spell.index}>Open full description</Link>
+          </p>
           {desc.body.map((p) => (
             <ReactMarkdown key={p}>{p}</ReactMarkdown>
           ))}

@@ -6,20 +6,17 @@ import { classesList } from "../../../lib/classesList";
 import { abilityScoresList } from "../../../lib/abilityScoresList";
 import { levels } from "../../../lib/levels";
 import clsx from "clsx";
+import Input from "../../../ui/Input";
 
 export default function SpellsHeader() {
   const filters = useFiltersStore();
   return (
     <div className="relative z-50 grid">
-      <div className="relative flex items-center font-dmsans">
-        <IconSearch className="absolute left-2 h-4 w-4" />
-        <input
-          className="w-full max-w-prose rounded-md border border-solid border-[#dddddd] py-1 pl-8 text-xl"
-          value={filters.search}
-          placeholder="Search by name, class or ability score"
-          onChange={(event) => filters.dispatch({ item: event.target.value, type: "search" })}
-        />
-      </div>
+      <Input
+        value={filters.search}
+        placeholder="Search by name, class or ability score"
+        onChange={(event) => filters.dispatch({ item: event.target.value, type: "search" })}
+      />
       <div className="relative mt-2 flex gap-2 font-dmsans">
         <Popover className="relative z-40">
           {({ open }) => (
