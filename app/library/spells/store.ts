@@ -1,13 +1,73 @@
-import { atom } from "jotai";
-import { client } from "../../../graphql/client";
-import { Spell } from "../../../graphql/codegen/graphql";
-import { spellsQuery } from "../../../graphql/queries/spellsQuery";
+import create from "zustand";
 
-export async function fetchSpells() {
-  const res = await client.request<{ spells: Spell[] }>(spellsQuery);
-  return res.spells;
+type Filters = {
+  search: string;
+  openedSpells: string[];
+  classes: string[];
+  levels: string[];
+  abilityScores: string[];
+};
+
+type FilterKeys = keyof Filters;
+
+type Args = {
+  type: FilterKeys;
+  item: string;
+};
+
+type Actions = {
+  dispatch: (args: Args) => void;
+  togglePopover: (x: boolean) => void;
+};
+
+type Store = Actions &
+  Filters & {
+    isPopoverOpen: boolean;
+  };
+
+function updateFilters(field: keyof Omit<Filters, "search">, filters: Filters, item: string) {
+  return filters[field].includes(item)
+    ? filters[field].filter((fieldItem) => fieldItem !== item)
+    : [...filters[field], item];
 }
 
-export const spellsAtom = atom((get) => {
-  return fetchSpells();
-});
+function filtersReducer(filters: Filters, { type, item }: Args) {
+  console.log("filters", filters);
+  console.log("type", type);
+  console.log("item", item);
+  switch (type) {
+    case "search":
+      return { search: item };
+    case "abilityScores":
+      return {
+        abilityScores: updateFilters("abilityScores", filters, item),
+      };
+    case "classes":
+      return {
+        classes: updateFilters("classes", filters, item),
+      };
+    case "levels":
+      return {
+        levels: updateFilters("levels", filters, item),
+      };
+    case "openedSpells":
+      return {
+        openedSpells: updateFilters("openedSpells", filters, item),
+      };
+  }
+}
+
+export const useFiltersStore = create<Store>((set) => ({
+  search: "",
+  openedSpells: [],
+  abilityScores: [],
+  levels: [],
+  classes: [],
+  isPopoverOpen: false,
+  dispatch: (args) => set((state) => filtersReducer(state, args)),
+  togglePopover: (popover) => set(() => ({ isPopoverOpen: popover })),
+}));
+
+export function isSelected(filters: Filters, { type, item }: Args): boolean {
+  return filters[type].includes(item);
+}

@@ -9,6 +9,7 @@ export const spellsQuery = gql`
       }
       attack_type
       casting_time
+      level
       classes {
         index
         hit_die

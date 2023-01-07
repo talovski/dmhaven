@@ -5,6 +5,7 @@ import SpellsList from "./SpellsList";
 
 async function getSpells() {
   const res = await client.request<{ spells: Spell[] }>(spellsQuery);
+  if (!res) throw new Error("Something went wrong on our side");
   return res.spells;
 }
 

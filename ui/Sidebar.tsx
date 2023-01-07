@@ -11,7 +11,6 @@ export default function Sidebar() {
   const close = () => setIsOpen(false);
 
   const segment = useSelectedLayoutSegments();
-  console.log("segment", segment);
 
   return (
     <div className="fixed top-0 left-0 w-full flex-col border-b font-dmsans lg:bottom-0 lg:z-auto lg:w-72 lg:border-r lg:border-gray-500">
@@ -57,7 +56,7 @@ function Item({ category }: { category: { index: string; text: string } }) {
         "bg-orange-200 text-black": isActive,
       })}
     >
-      <div className="flex text-sm font-semibold uppercase tracking-wider text-gray-700">
+      <div className="flex font-dmserif text-sm font-semibold uppercase tracking-wider text-gray-700">
         <p>{category.text}</p>
       </div>
     </Link>
